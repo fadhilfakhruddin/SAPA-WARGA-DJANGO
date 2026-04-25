@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+{% load bootstrap5 %}
+{% load static %}
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dashboard{% endblock %} - Avaro</title>
+    <!-- Asumsi icon sudah ada -->
+    <link rel="shortcut icon" href="{% static 'nyatuwarga_blue.png' %}" type="image/x-icon">
+
+    <!-- KEMBALIKAN TAG INI: Memuat CSS Bootstrap bawaan django-bootstrap5 -->
+    {% bootstrap_css %}
+    
+    <!-- GOOGLE MATERIAL SYMBOLS -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+
+    <!-- Font Kustom -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+
+    <script src="https://unpkg.com/htmx.org@1.9.11"></script>
+    
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: #F8FAFC; 
+        }
+        
+        .main-wrapper {
+            display: flex;
+            flex-grow: 1; 
+            padding-top: 56px; 
+            position: relative;
+        }
+
+        .sidebar {
+            width: 260px;
+            flex-shrink: 0;
+            background-color: #1E293B; 
+            border-right: 1px solid #343a40;
+            padding: 1.5rem 1rem;
+            position: sticky;
+            top: 56px; 
+            height: calc(100vh - 56px); 
+            overflow-y: auto;
+            transition: transform 0.3s ease-in-out; 
+            z-index: 1025; 
+        }
+
+        .sidebar .sidebar-heading {
+            color: #6c757d; 
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .sidebar .nav-link {
+            color: #adb5bd; 
+            font-weight: 500;
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            border-radius: 0.375rem; 
+            transition: all 0.2s ease;
+        }
+        
+        .sidebar .nav-link .material-symbols-outlined {
+            font-size: 1.25rem; 
+            margin-right: 0.75rem;
+            width: 24px; 
+            text-align: center;
+            font-variation-settings: 'FILL' 0; 
+        }
+
+        .sidebar .nav-link:hover {
+            color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.05); 
+        }
+        
+        .sidebar .nav-link:hover .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1; 
+        }
+
+        .sidebar .nav-link.active {
+            color: #ffffff;
+            background-color: #3B82F6; 
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4); 
+        }
+        
+        .sidebar .nav-link.active .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1; 
+        }
+
+        .content-area {
+            flex-grow: 1;
+            padding: 2rem;
+            background-color: #f8f9fa; 
+            width: 100%; 
+        }
+        
+        .navbar-brand img {
+            max-height: 30px; 
+        }
+        
+        .dropdown-menu {
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border: none;
+        }
+        
+        .dropdown-item .material-symbols-outlined {
+            font-size: 1.1rem;
+            margin-right: 0.5rem;
+            vertical-align: middle; 
+            font-variation-settings: 'FILL' 1; 
+        }
+
+        .dropdown-item.text-danger:hover {
+            background-color: #dc3545;
+            color: #ffffff !important;
+        }
+        
+        .navbar-nav .nav-link .material-symbols-outlined {
+            font-size: 1.5rem; 
+            vertical-align: middle;
+            margin-right: 0.25rem;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 56px;
+            left: 0;
+            width: 100vw;
+            height: calc(100vh - 56px);
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1020;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        @media (max-width: 991.98px) {
+            .sidebar {
+                position: fixed; 
+                left: 0;
+                transform: translateX(-100%); 
+            }
+            
+            .sidebar.show {
+                transform: translateX(0); 
+            }
+
+            .content-area {
+                padding: 1rem; 
+            }
+
+            .sidebar-overlay.show {
+                display: block;
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand navbar-light bg-white border-bottom shadow-sm fixed-top" style="z-index: 1030;">
+            <div class="container-fluid">
+                
+                <button class="btn btn-light d-lg-none me-2 border-0" type="button" id="sidebarToggle">
+                    <span class="material-symbols-outlined" style="vertical-align: middle;">menu</span>
+                </button>
+
+                <a class="navbar-brand d-flex align-items-center" href="{% url 'avaroapp' %}">
+                    <img src="{% static 'nyatuwarga_blue.png' %}" alt="Logo" class="d-inline-block align-text-top me-2">
+                    NyatuWarga
+                </a>
+
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="material-symbols-outlined">account_circle</span>
+                            <span class="d-none d-sm-inline">{{ request.user.username|default:"Admin Fadhil" }}</span> 
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end position-absolute" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="{% url 'profile' %}">
+                                <span class="material-symbols-outlined">person</span>Profil
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="post" action="{% url 'logout' %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <span class="material-symbols-outlined">logout</span>Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <div class="main-wrapper">
+        
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <nav class="sidebar" id="sidebarMenu">
+            <h5 class="sidebar-heading">Menu</h5>
+            <ul class="nav flex-column gap-1">
+                <li class="nav-item">
+                    <a class="nav-link {% if active_page == 'dashboard' %} active {% endif %}" {% if active_page == 'dashboard' %} aria-current="page" {% endif %} href="{% url 'avaroapp' %}">
+                        <span class="material-symbols-outlined">dashboard</span>
+                        Dashboard
+                    </a>
+                </li>
+                {% if request.user.is_superuser or request.user.is_staff %}
+                <li class="nav-item">
+                    <a class="nav-link" href="#masterDataCollapse" class="nav-link d-flex align-items-center" data-bs-toggle="collapse" aria-expanded="false">
+                        <span class="material-symbols-outlined">group_add</span>
+                        Kelola Daftar Warga
+                    </a>
+                    <div class="collapse {% if active_page == 'daftarBlok' or active_page == 'daftarWarga' %} show {% endif %}" id="masterDataCollapse">
+                        <ul class="nav flex-column nav-submenu">
+                            <a class="nav-link {% if active_page == 'daftarBlok' %} active {% endif %}" {% if active_page == 'daftarBlok' %} aria-current="page" {% endif %} href="{% url 'daftar_blok' %}">
+                            <span>Daftar Blok</span>
+                            </a>
+                        </ul>
+                        <ul class="nav flex-column nav-submenu">
+                            <a class="nav-link {% if active_page == 'daftarWarga' %} active {% endif %}" {% if active_page == 'daftarWarga' %} aria-current="page" {% endif %} href="{% url 'daftarkan_warga' %}">
+                            <span>Daftar Warga</span>
+                            </a>
+                        </ul>
+                    </div>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link {% if active_page == 'daftarWarga' %} active {% endif %}" {% if active_page == 'daftarWarga' %} aria-current="page" {% endif %} href="{% url 'daftarkan_warga' %}">
+                        <span class="material-symbols-outlined">group</span>
+                        Data Warga
+                    </a>
+                </li>
+                {% endif %}
+                <li class="nav-item">
+                    <a class="nav-link" href="#kasDataCollapse" class="nav-link d-flex align-items-center" data-bs-toggle="collapse" aria-expanded="false">
+                        <span class="material-symbols-outlined">account_balance_wallet</span>
+                        Kas & Iuran
+                    </a>
+                    <div class="collapse {% if active_page == 'daftarTransaksi' or active_page == 'rekapPemasukan' or active_page == 'rekapKas' %} show {% endif %}" id="kasDataCollapse">
+                        <ul class="nav flex-column nav-submenu">
+                            <a class="nav-link {% if active_page == 'daftarTransaksi' %} active {% endif %}" {% if active_page == 'daftarTransaksi' %} aria-current="page" {% endif %} href="{% url 'daftar_transaksi' %}">
+                            <span>Data Transaksi</span>
+                            </a>
+                        </ul>
+                        <ul class="nav flex-column nav-submenu">
+                            <a class="nav-link {% if active_page == 'rekapPemasukan' %} active {% endif %}" {% if active_page == 'rekapPemasukan' %} aria-current="page" {% endif %} href="{% url 'rekap_pemasukan' %}">
+                            <span>Rekap Pemasukan</span>
+                            </a>
+                        </ul>
+                        <ul class="nav flex-column nav-submenu">
+                            <a class="nav-link {% if active_page == 'rekapKas' %} active {% endif %}" {% if active_page == 'rekapKas' %} aria-current="page" {% endif %} href="{% url 'rekap_kas' %}">
+                            <span>Rekap Kas</span>
+                            </a>
+                        </ul>
+                    </div>
+                </li>
+            </ul>
+        </nav>
+        
+        <main class="content-area">
+            {% if messages %}
+                <div class="mb-3">
+                    {% bootstrap_messages %}
+                </div>
+            {% endif %}
+            
+            {% block content %}
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="h4 mb-0 font-weight-bold" style="font-weight: 700;">Dashboard Perumahan</h2>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-12 col-md-4">
+                        <div class="card border-0 shadow-sm rounded-4 h-100" style="background: linear-gradient(135deg, #10B981, #059669); color: white;">
+                            <div class="card-body">
+                                <h6 class="text-white-50 text-uppercase mb-2" style="font-size: 0.8rem; letter-spacing: 1px;">Saldo Kas RT</h6>
+                                <h3 class="mb-0 fw-bold">Rp 12.500.000</h3>
+                                <p class="mt-2 mb-0 small"><span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">trending_up</span> +Rp 500K bulan ini</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <div class="card border-0 shadow-sm rounded-4 h-100">
+                            <div class="card-body">
+                                <h6 class="text-muted text-uppercase mb-2" style="font-size: 0.8rem; letter-spacing: 1px;">Warga Lunas</h6>
+                                <h3 class="mb-0 text-primary fw-bold">45 <span class="fs-6 text-muted fw-normal">/ 50 KK</span></h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <div class="card border-0 shadow-sm rounded-4 h-100">
+                            <div class="card-body">
+                                <h6 class="text-muted text-uppercase mb-2" style="font-size: 0.8rem; letter-spacing: 1px;">Pengeluaran (Bulan ini)</h6>
+                                <h3 class="mb-0 text-danger fw-bold">Rp 1.2M</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card border-0 shadow-sm rounded-4 p-3">
+                    <h5 class="mb-3">Aktivitas Terbaru</h5>
+                    <p class="text-muted">Ini adalah area di mana tabel pemasukan/pengeluaran terbaru akan ditampilkan nantinya.</p>
+                </div>
+            {% endblock %}
+        </main>
+    </div>
+
+    {% block modals %}{% endblock %}
+
+    <!-- PERUBAHAN UTAMA: Gunakan tag bawaan Django untuk Javascript Bootstrap -->
+    {% bootstrap_javascript %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const sidebarToggle = document.getElementById("sidebarToggle");
+            const sidebarMenu = document.getElementById("sidebarMenu");
+            const sidebarOverlay = document.getElementById("sidebarOverlay");
+
+            function toggleSidebar() {
+                sidebarMenu.classList.toggle("show");
+                sidebarOverlay.classList.toggle("show");
+            }
+
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener("click", toggleSidebar);
+            }
+
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener("click", toggleSidebar);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+{% extends "temp_auth.html" %}
+{% block title %} LogIn {% endblock %}
+
+{% block content %}
+    <h2 class="h5 fw-semibold text-muted text-uppercase mb-4">Selamat Datang</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <!-- Render Manual untuk mencocokkan desain: -->
+        <div class="mb-3">
+            <label for="{{ form.username.id_for_label }}" class="form-label-custom">Nama Pengguna / NIK:</label>
+            <input type="text" id="{{ form.username.id_for_label }}" name="username" 
+                    class="form-control rounded-pill p-3 {% if form.username.errors %}is-invalid{% endif %}"
+                    required>
+            {% if form.username.errors %}
+            <div class="invalid-feedback">
+                {{ form.username.errors.as_text }}
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="mb-3">
+            <label for="{{ form.password.id_for_label }}" class="form-label-custom">Sandi:</label>
+            <input type="password" id="{{ form.password.id_for_label }}" name="password" 
+                    class="form-control rounded-pill p-3 {% if form.password.errors %}is-invalid{% endif %}"
+                    placeholder="••••••••" required>
+            {% if form.password.errors %}
+            <div class="invalid-feedback">
+                {{ form.password.errors.as_text }}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Tampilkan error non-field -->
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">
+                {% for error in form.non_field_errors %}
+                  <p>{{ error|escape }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        <!-- Tombol Login -->
+        <div class="d-grid">
+            <button type="submit" 
+                    class="btn btn-primary btn-lg rounded-pill p-3 text-uppercase fw-medium">
+                LOGIN
+            </button>
+        </div>
+        
+        <!-- Link Sign Up -->
+        <div class="text-center pt-4 mt-2">
+            <p class="text-muted small">
+                <a href="mailto:fadhilfakhruddin@gmail.com" class="text-decoration-none text-muted">UniversitasTerbuka@Capstone.2025</a>
+            </p>
+        </div>
+    </form>
+
+{% endblock %}

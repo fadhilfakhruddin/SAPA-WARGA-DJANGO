@@ -1,0 +1,151 @@
+{% extends "index_base.html" %}
+{% load bootstrap5 %}
+{% block title %} Manajemen Blok {% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <h2 class="h4 mb-0 fw-bold" style="color: #1E293B;">Manajemen Blok Rumah</h2>
+    </div>
+
+    <div class="row g-4">
+        
+        <div class="col-12 col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 sticky-top" style="top: 80px;">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4">
+                    <h5 class="card-title fw-bold text-primary mb-0 d-flex align-items-center">
+                        <span class="material-symbols-outlined me-2">add_circle</span>
+                        Tambah Blok Baru
+                    </h5>
+                    <p class="text-muted small mt-1 mb-0">Masukkan data blok atau area rumah baru ke dalam sistem.</p>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" id="blokform" action="">
+                        {% csrf_token %}
+                        {% bootstrap_form form %}
+                        <div class="mt-4 pt-2">
+                            <button type="submit" class="btn btn-primary w-100 rounded-3 py-2 fw-medium shadow-sm d-flex justify-content-center align-items-center gap-2">
+                                <span class="material-symbols-outlined" style="font-size: 20px;">save</span>
+                                Simpan Data
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-3 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="card-title fw-bold mb-0 d-flex align-items-center" style="color: #1E293B;">
+                        <span class="material-symbols-outlined me-2">grid_view</span>
+                        Daftar Blok Tersedia
+                    </h5>
+                    <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">{{ daftarBlok|length }} Blok</span>
+                </div>
+                <div class="card-body p-0"> 
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle m-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col" class="px-4 py-3 text-start text-uppercase small fw-bold text-muted border-0">Kode Blok</th>
+                                    <th scope="col" class="px-4 py-3 text-start text-uppercase small fw-bold text-muted border-0">Keterangan / Nama Blok</th>
+                                    <th scope="col" class="px-4 py-3 text-end text-uppercase small fw-bold text-muted border-0">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="border-top-0">
+                                {% for data in daftarBlok %}
+                                <tr>
+                                    <td class="px-4 py-3">
+                                        <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-bold border border-primary-subtle" style="font-size: 0.85rem;">
+                                            {{ data.blok }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 fw-medium text-dark">{{ data.nama_blok }}</td>
+                                    <td class="px-4 py-3 text-end text-nowrap">
+                                        
+                                        <button class="btn btn-sm btn-light text-primary rounded-circle p-2 me-1 shadow-sm border" type="button"
+                                            data-bs-toggle="offcanvas" 
+                                            data-bs-target="#editOffcanvas"
+                                            onclick="editBlokData(this)"
+                                            data-blok="{{ data.blok }}"
+                                            data-name="{{ data.nama_blok }}"
+                                            title="Edit Blok">
+                                            <span class="material-symbols-outlined" style="font-size: 18px; vertical-align: middle;">edit</span>
+                                        </button>
+                                        
+                                        <a href="{% url 'del_blok' data.blok %}?next={{ request.path }}" 
+                                        class="btn btn-sm btn-light text-danger rounded-circle p-2 shadow-sm border" 
+                                        onclick="return confirm('Apakah kamu yakin ingin menghapus blok {{ data.blok }} - {{ data.nama_blok }}?');"
+                                        title="Hapus Blok">
+                                            <span class="material-symbols-outlined" style="font-size: 18px; vertical-align: middle;">delete</span>
+                                        </a>
+
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-5 text-muted">
+                                        <span class="material-symbols-outlined d-block mb-2" style="font-size: 48px; opacity: 0.3;">inbox_customize</span>
+                                        Belum ada data blok yang didaftarkan.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block modals %}
+    <!-- TAMBAHAN Z-INDEX UNTUK MEMASTIKAN PANEL DI ATAS BACKDROP -->
+    <div class="offcanvas offcanvas-end shadow-lg" tabindex="-1" id="editOffcanvas" aria-labelledby="editOffcanvasLabel" style="z-index: 1055;">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title fw-bold text-primary d-flex align-items-center" id="editOffcanvasLabel">
+                <span class="material-symbols-outlined me-2">edit_note</span>
+                Edit Data Blok
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <form method="POST" id="formEditBlok" action="">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="editKodeBlok" class="form-label fw-medium">Kode Blok</label>
+                    <input type="text" class="form-control bg-light" id="editKodeBlok" name="blok" readonly>
+                    <div class="form-text">Kode Blok tidak dapat diubah.</div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="editNamaBlok" class="form-label fw-medium">Nama / Keterangan Blok</label>
+                    <input type="text" class="form-control" id="editNamaBlok" name="nama_blok" required>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary rounded-3 py-2 fw-medium shadow-sm">
+                        Simpan Perubahan
+                    </button>
+                    <button type="button" class="btn btn-light rounded-3 py-2 fw-medium border" data-bs-dismiss="offcanvas">
+                        Batal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function editBlokData(element) {
+            const kodeBlok = element.getAttribute('data-blok');
+            const namaBlok = element.getAttribute('data-name');
+
+            document.getElementById('editKodeBlok').value = kodeBlok;
+            document.getElementById('editNamaBlok').value = namaBlok;
+
+            const formEdit = document.getElementById('formEditBlok');
+            formEdit.action = `/edit-blok/${kodeBlok}/?next={{ request.path }}`; 
+        }
+    </script>
+{% endblock %}

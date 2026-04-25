@@ -1,0 +1,7 @@
+{
+    "api_keys": {
+        "chatery_api": "telegram_api",
+        "genai_api": "Gemini API Key"
+    },
+    "session": "session Chatery"
+}

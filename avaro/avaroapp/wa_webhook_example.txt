@@ -1,0 +1,27 @@
+==================================================
+Mendapat Data Webhook Baru!
+==================================================
+{
+    "event": "message",
+    "sessionId": "avaro",
+    "metadata": {},
+    "data": {
+        "id": "3EB08307B7D38AAACBFDC8",
+        "chatId": "272051885600793@lid",
+        "fromMe": false,
+        "sender": "272051885600793@lid",
+        "senderPhone": "272051885600793",
+        "senderName": "Fadhil Fakhruddin",
+        "timestamp": 1766396114,
+        "type": "text",
+        "content": "halo ini pesan saya",
+        "caption": null,
+        "mimetype": null,
+        "filename": null,
+        "mediaUrl": null,
+        "isGroup": false,
+        "quotedMessage": null
+    },
+    "timestamp": "2025-12-22T09:35:14.589Z"
+}
+==================================================
