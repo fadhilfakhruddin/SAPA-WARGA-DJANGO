@@ -60,7 +60,7 @@ def rename_bukti_transaksi(instance, filename):
 class Transaksi(models.Model):
     JENIS_TRANSAKSI = [
         ('debit', 'Debit'),
-        ('Kredit', 'Kredit')
+        ('kredit', 'Kredit')
     ]
 
     tanggal = models.DateField(default=timezone.now)

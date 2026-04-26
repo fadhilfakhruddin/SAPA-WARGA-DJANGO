@@ -43,7 +43,9 @@
                     <thead class="table-light">
                         <tr>
                             <th class="px-4 py-3 text-start text-uppercase small fw-bold text-muted border-0">Blok</th>
+                            {% if request.user.is_superuser %}
                             <th class="px-4 py-3 text-start text-uppercase small fw-bold text-muted border-0">Username</th>
+                            {% endif %}
                             <th class="px-4 py-3 text-start text-uppercase small fw-bold text-muted border-0">Nama Kepala</th>
                             
                             <!-- KOLOM SENSITIF: HANYA DITAMPILKAN KE ADMIN -->
@@ -73,8 +75,9 @@
                                     {{ warga.blok.blok|default:"-" }}
                                 </span>
                             </td>
-
+                            {% if request.user.is_superuser %}
                             <td class="px-4 py-3 fw-medium text-dark">{{ warga.user|default:"-" }}</td>
+                            {% endif %}
                             
                             <td class="px-4 py-3 fw-medium text-dark">
                                 {{ warga.nama_kepala|default:"Belum Diisi" }}

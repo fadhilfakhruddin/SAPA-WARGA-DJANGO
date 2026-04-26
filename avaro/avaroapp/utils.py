@@ -1,9 +1,7 @@
 import socket, requests, datetime, logging, json, locale, os
 import pandas as pd
 from pathlib import Path
-from datetime import timedelta
-from datetime import date
-from django.core.files.storage import FileSystemStorage
+from .models import Transaksi
 
 try:
     locale.setlocale(locale.LC_TIME, 'id_ID.UTF-8')
@@ -31,64 +29,34 @@ def tulis_config(data):
     with open(jsonloc, 'w') as file:
         json.dump(data, file, indent=4)
 
+def data_kas(tahun):
+    list_bulan = list(range(1, 13))
 
-def data_cuaca():
-    logger.info('Ambil data cuaca')
-    dayNow = datetime.datetime.now()
-    url = "https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=31.73.01.1003"
-    dataCuaca = None
-    tempList = []
-    encounter = 0
+    rekap_bulanan = {
+        'pemasukan': {m: 0 for m in list_bulan},
+        'pengeluaran': {m: 0 for m in list_bulan},
+        'saldo': {m: 0 for m in list_bulan},
+        'total_pemasukan': 0,
+        'total_pengeluaran': 0,
+        'total_saldo': 0
+    }
 
-    try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
+    transaksi = Transaksi.objects.filter(tanggal__year=tahun)
 
-        data_json = response.json()
+    for tx in transaksi:
+        bulan_tx = tx.tanggal.month
+        if tx.jenis == 'debit':
+            rekap_bulanan['pemasukan'][bulan_tx] += tx.nominal
+            rekap_bulanan['total_pemasukan'] += tx.nominal
+        elif tx.jenis == 'kredit': # Sesuaikan dengan value 'kredit' di models.py Anda
+            rekap_bulanan['pengeluaran'][bulan_tx] += tx.nominal
+            rekap_bulanan['total_pengeluaran'] += tx.nominal
 
-    except requests.exceptions.HTTPError as errh:
-        print(f"Http Error: {errh}")
-        return False
-    except requests.exceptions.ConnectionError as errc:
-        print(f"Error Connecting: {errc}")
-        return False
-    except requests.exceptions.Timeout as errt:
-        print(f"Timeout Error: {errt}")
-        return False
-    except requests.exceptions.RequestException as err:
-        print(f"Oops: Ada yang salah: {err}")
-        return False
+        for m in list_bulan:
+            rekap_bulanan['saldo'][m] = rekap_bulanan['pemasukan'][m] - rekap_bulanan['pengeluaran'][m]
+        rekap_bulanan['total_saldo'] = rekap_bulanan['total_pemasukan'] - rekap_bulanan['total_pengeluaran']
 
-    for loopData in data_json["data"][0]["cuaca"]:
-        logger.info('Loop data cuaca')
-        for getData in loopData:
-            dayJson = datetime.datetime.strptime(getData["local_datetime"], "%Y-%m-%d %H:%M:%S")
-
-            if dayJson.strftime("%Y-%m-%d") == dayNow.strftime("%Y-%m-%d"):
-                tempList.append(getData['t'])
-                if dayJson > dayNow and encounter == 0:
-                    dataCuaca = getData
-                    encounter = 1
-
-    return data_json["data"][0]["lokasi"]["desa"], max(tempList), min(tempList), dataCuaca
+    return rekap_bulanan
 
 # if __name__ == "__main__":
     # print(getChart1())
-
-def getIP():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-    try:
-        s.connect(('8.8.8.8', 80))
-        return s.getsockname()[0]
-    except Exception:
-        return '127.0.0.1'
-    finally:
-        s.close()
-
-class OverwriteStorage(FileSystemStorage):
-    def get_available_name(self, name, max_length=None):
-        # Jika file sudah ada, hapus file lama sebelum menyimpan yang baru
-        if self.exists(name):
-            os.remove(os.path.join(self.location, name))
-        return name

@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 {% load bootstrap5 %}
 {% load static %}
+{% load humanize %}
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Dashboard{% endblock %} - Avaro</title>
+    <title>{% block title %}Dashboard{% endblock %} - SAPA WARGA</title>
     <!-- Asumsi icon sudah ada -->
     <link rel="shortcut icon" href="{% static 'nyatuwarga_blue.png' %}" type="image/x-icon">
 
@@ -180,7 +181,7 @@
 
                 <a class="navbar-brand d-flex align-items-center" href="{% url 'avaroapp' %}">
                     <img src="{% static 'nyatuwarga_blue.png' %}" alt="Logo" class="d-inline-block align-text-top me-2">
-                    NyatuWarga
+                    Sapa Warga
                 </a>
 
                 <ul class="navbar-nav ms-auto">
@@ -251,8 +252,8 @@
                 {% endif %}
                 <li class="nav-item">
                     <a class="nav-link" href="#kasDataCollapse" class="nav-link d-flex align-items-center" data-bs-toggle="collapse" aria-expanded="false">
-                        <span class="material-symbols-outlined">account_balance_wallet</span>
-                        Kas & Iuran
+                        <span class="material-symbols-outlined">analytics</span>
+                        Rekapitulasi
                     </a>
                     <div class="collapse {% if active_page == 'daftarTransaksi' or active_page == 'rekapPemasukan' or active_page == 'rekapKas' %} show {% endif %}" id="kasDataCollapse">
                         <ul class="nav flex-column nav-submenu">
@@ -289,41 +290,202 @@
 
                 <div class="row g-3 mb-4">
                     <div class="col-12 col-md-4">
-                        <div class="card border-0 shadow-sm rounded-4 h-100" style="background: linear-gradient(135deg, #10B981, #059669); color: white;">
+                        <div class="card border-0 shadow-sm rounded-4 h-100" style="background: {% if trend >= 0 %} linear-gradient(135deg, #10B981, #059669) {% else %} linear-gradient(135deg, #F59E0B, #DC2626) {% endif %}; color: white;">
                             <div class="card-body">
                                 <h6 class="text-white-50 text-uppercase mb-2" style="font-size: 0.8rem; letter-spacing: 1px;">Saldo Kas RT</h6>
-                                <h3 class="mb-0 fw-bold">Rp 12.500.000</h3>
-                                <p class="mt-2 mb-0 small"><span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">trending_up</span> +Rp 500K bulan ini</p>
+                                <h3 class="mb-0 fw-bold">Rp {{ saldo|floatformat:0|intcomma }}</h3>
+                                <p class="mt-2 mb-0 small">
+                                    <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">
+                                        {% if trend == 0 %}
+                                            trending_flat
+                                        {% elif trend > 0 %}    
+                                            trending_up
+                                        {% else %}
+                                            trending_down
+                                        {% endif %}
+                                    </span> 
+                                    +Rp {{trend|floatformat:0|intcomma}} bulan ini
+                                </p>
                             </div>
                         </div>
                     </div>
-                    <div class="col-6 col-md-4">
+                    <div class="col-12 col-md-3">
+                        {% if request.user.is_superuser %}
                         <div class="card border-0 shadow-sm rounded-4 h-100">
                             <div class="card-body">
                                 <h6 class="text-muted text-uppercase mb-2" style="font-size: 0.8rem; letter-spacing: 1px;">Warga Lunas</h6>
-                                <h3 class="mb-0 text-primary fw-bold">45 <span class="fs-6 text-muted fw-normal">/ 50 KK</span></h3>
+                                <h3 class="mb-0 text-primary fw-bold">{{ warga_bayar }} <span class="fs-6 text-muted fw-normal">/ {{ jml_warga }} KK</span></h3>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-6 col-md-4">
+                        {% else %}
                         <div class="card border-0 shadow-sm rounded-4 h-100">
                             <div class="card-body">
-                                <h6 class="text-muted text-uppercase mb-2" style="font-size: 0.8rem; letter-spacing: 1px;">Pengeluaran (Bulan ini)</h6>
-                                <h3 class="mb-0 text-danger fw-bold">Rp 1.2M</h3>
+                                <h6 class="text-muted text-uppercase mb-2" style="font-size: 0.8rem; letter-spacing: 1px;">Jumlah Yang Kamu Bayar Bulan ini</h6>
+                                <h3 class="mb-0 text-primary fw-bold">Rp {{ pemasukan_user|floatformat:0|intcomma }}</h3>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-12 col-md-5"> <!-- Ukuran kolom sedikit dilebarkan jika ditaruh 2 data -->
+                        <div class="card border-0 shadow-sm rounded-4 h-100">
+                            <div class="card-body d-flex justify-content-between align-items-center">
+                                
+                                <!-- Bagian Pemasukan -->
+                                <div class="w-50 pe-3">
+                                    <h6 class="text-muted text-uppercase mb-2" style="font-size: 0.8rem; letter-spacing: 1px;">Pemasukan (Bulan Ini)</h6>
+                                    <h3 class="mb-0 text-success fw-bold">Rp {{ pemasukan|floatformat:0|intcomma }} <span class="material-symbols-outlined" style="font-size: 1.8rem; vertical-align: middle;">call_received</span></h3>
+                                </div>
+
+                                <!-- Garis Pembatas -->
+                                <div class="border-end h-75 opacity-50"></div>
+
+                                <!-- Bagian Pengeluaran -->
+                                <div class="w-50 ps-4">
+                                    <h6 class="text-muted text-uppercase mb-2" style="font-size: 0.8rem; letter-spacing: 1px;">Pengeluaran (Bulan Ini)</h6>
+                                    <h3 class="mb-0 text-danger fw-bold">Rp {{ pengeluaran|floatformat:0|intcomma }} <span class="material-symbols-outlined" style="font-size: 1.8rem; vertical-align: middle;">call_made</span></h3>
+                                </div>
+
                             </div>
                         </div>
                     </div>
                 </div>
                 
+                <div class="card border-0 shadow-sm rounded-4 p-3 mb-4">
+                    <div class="col-12 col-lg-12">
+                        <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div>
+                                    <h5 class="fw-bold mb-0 text-dark">Arus Kas {{ tahun_sekarang }}</h5>
+                                    <p class="text-muted small mt-1 mb-0">Perbandingan pemasukan dan pengeluaran per bulan.</p>
+                                </div>
+                                <span class="badge bg-light text-primary border px-3 py-2 rounded-pill">{{ tahun_sekarang }}</span>
+                            </div>
+                            
+                            <!-- Tempat Canvas untuk Chart.js -->
+                            <div style="position: relative; height: 320px; width: 100%;">
+                                <canvas id="kasChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card border-0 shadow-sm rounded-4 p-3">
                     <h5 class="mb-3">Aktivitas Terbaru</h5>
-                    <p class="text-muted">Ini adalah area di mana tabel pemasukan/pengeluaran terbaru akan ditampilkan nantinya.</p>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle m-0 text-nowrap">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="px-4 py-3 text-start text-uppercase small fw-bold text-muted border-0">Tanggal</th>
+                                    <th class="px-4 py-3 text-start text-uppercase small fw-bold text-muted border-0">Jenis</th>
+                                    <th class="px-4 py-3 text-start text-uppercase small fw-bold text-muted border-0">Keterangan</th>
+                                    <th class="px-4 py-3 text-end text-uppercase small fw-bold text-muted border-0">Nominal</th>
+                                    <th class="px-4 py-3 text-center text-uppercase small fw-bold text-muted border-0">Bukti</th>
+                                    
+                                    {% if request.user.is_superuser %}
+                                        <th class="px-4 py-3 text-end text-uppercase small fw-bold text-muted border-0">Admin</th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody class="border-top-0">
+                                {% for tx in daftar_transaksi %}
+                                <tr>
+                                    <td class="px-4 py-3 text-muted small fw-medium">{{ tx.tanggal|date:"d M Y" }}</td>
+                                    
+                                    <!-- Badge Jenis Transaksi -->
+                                    <td class="px-4 py-3">
+                                        {% if tx.jenis == 'debit' %}
+                                            <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill border border-success-subtle">Pemasukan</span>
+                                        {% else %}
+                                            <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill border border-danger-subtle">Pengeluaran</span>
+                                        {% endif %}
+                                    </td>
+                                    
+                                    <!-- Keterangan dipotong jika terlalu panjang -->
+                                    <td class="px-4 py-3 small text-muted" title="{{ tx.keterangan }}">
+                                        {{ tx.keterangan|truncatechars:30|default:"-" }}
+                                    </td>
+                                    
+                                    <td class="px-4 py-3 text-end fw-bold {% if tx.jenis == 'debit' %}text-success{% else %}text-danger{% endif %}">
+                                        Rp {{ tx.nominal|floatformat:0|intcomma }}
+                                    </td>
+                                    
+                                    <!-- Tombol Lihat Bukti -->
+                                    <td class="px-4 py-3 text-center">
+                                        {% if tx.bukti_transaksi %}
+                                            <button class="btn btn-sm btn-outline-secondary rounded-pill d-inline-flex align-items-center px-3" 
+                                                    onclick="showBuktiModal('{{ tx.bukti_transaksi.url }}', '{{ tx.kategori }} - {{ tx.tanggal|date:"d M Y" }}')">
+                                                <span class="material-symbols-outlined me-1" style="font-size: 16px;">image</span>
+                                                Lihat
+                                            </button>
+                                        {% else %}
+                                            <span class="text-muted small fst-italic">-</span>
+                                        {% endif %}
+                                    </td>
+                                    
+                                    <!-- Nama Admin yang Input -->
+                                    {% if request.user.is_superuser %}
+                                    <td class="px-4 py-3 text-end small text-muted">
+                                        {{ tx.user_input.username|default:"Sistem" }}
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="9" class="text-center py-5 text-muted">
+                                        <span class="material-symbols-outlined d-block mb-2" style="font-size: 48px; opacity: 0.3;">receipt_long</span>
+                                        Belum ada riwayat transaksi.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <a href="{% url 'daftar_transaksi' %}" class="btn btn-light w-100 mt-4 text-primary fw-medium rounded-3 border">Lihat Semua</a>
                 </div>
             {% endblock %}
         </main>
     </div>
 
-    {% block modals %}{% endblock %}
+    {% block modals %}
+        <div class="modal fade" id="buktiModal" tabindex="-1" aria-labelledby="buktiModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                    <div class="modal-header border-bottom-0 bg-light">
+                        <h5 class="modal-title fw-bold text-dark d-flex align-items-center" id="buktiModalLabel">
+                            <span class="material-symbols-outlined me-2">photo_library</span>
+                            <span id="buktiTitle">Bukti Transaksi</span>
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-0 text-center bg-dark">
+                        <!-- Area penempatan foto -->
+                        <img id="buktiImage" src="" alt="Bukti Transaksi" class="img-fluid" style="max-height: 70vh; object-fit: contain;">
+                    </div>
+                    <div class="modal-footer border-top-0 bg-light d-flex justify-content-between">
+                        <a id="downloadBukti" href="" download class="btn btn-sm btn-outline-primary d-flex align-items-center">
+                            <span class="material-symbols-outlined me-1" style="font-size: 18px;">download</span>
+                            Unduh
+                        </a>
+                        <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Tutup</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Javascript untuk memunculkan gambar ke dalam Modal -->
+        <script>
+            function showBuktiModal(imageUrl, titleText) {
+                // Set sumber gambar dan judul modal
+                document.getElementById('buktiImage').src = imageUrl;
+                document.getElementById('buktiTitle').innerText = titleText;
+                document.getElementById('downloadBukti').href = imageUrl;
+                
+                // Tampilkan modal menggunakan fungsi bawaan Bootstrap 5
+                var myModal = new bootstrap.Modal(document.getElementById('buktiModal'));
+                myModal.show();
+            }
+        </script>
+    {% endblock %}
 
     <!-- PERUBAHAN UTAMA: Gunakan tag bawaan Django untuk Javascript Bootstrap -->
     {% bootstrap_javascript %}
@@ -346,6 +508,110 @@
 
             if (sidebarOverlay) {
                 sidebarOverlay.addEventListener("click", toggleSidebar);
+            }
+        });
+    </script>
+    <script>
+        // Pastikan halaman di-load sepenuhnya sebelum merender Chart
+        document.addEventListener("DOMContentLoaded", function() {
+            const ctx = document.getElementById('kasChart');
+            
+            if (ctx) {
+                new Chart(ctx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'],
+                        datasets: [
+                            {
+                                label: 'Pemasukan',
+                                // Dummy Data: Angka Pemasukan Bulanan
+                                data: [{% for nominal in rekap_bulanan.pemasukan.values %} {% if nominal > 0 %}{{ nominal }}{% else %} 0 {% endif %}, {% endfor %}], 
+                                backgroundColor: '#10B981', // Warna Emerald/Hijau Modern
+                                borderRadius: 6, // Ujung batang melengkung
+                                barPercentage: 0.6,
+                                categoryPercentage: 0.8
+                            },
+                            {
+                                label: 'Pengeluaran',
+                                // Dummy Data: Angka Pengeluaran Bulanan
+                                data:[{% for nominal in rekap_bulanan.pengeluaran.values %} {% if nominal > 0 %}{{ nominal }}{% else %} 0 {% endif %}, {% endfor %}],
+                                backgroundColor: '#EF4444', // Warna Merah Modern
+                                borderRadius: 6,
+                                barPercentage: 0.6,
+                                categoryPercentage: 0.8
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            intersect: false,
+                            mode: 'index',
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                align: 'end',
+                                labels: {
+                                    usePointStyle: true,
+                                    boxWidth: 8,
+                                    font: { family: "'Plus Jakarta Sans', sans-serif", weight: '500' }
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(30, 41, 59, 0.9)',
+                                titleFont: { family: "'Plus Jakarta Sans', sans-serif" },
+                                bodyFont: { family: "'Plus Jakarta Sans', sans-serif" },
+                                padding: 12,
+                                cornerRadius: 8,
+                                callbacks: {
+                                    // Mengubah format angka menjadi Rupiah di Tooltip saat di-hover
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) { label += ': '; }
+                                        if (context.parsed.y !== null) {
+                                            label += new Intl.NumberFormat('id-ID', { 
+                                                style: 'currency', 
+                                                currency: 'IDR',
+                                                minimumFractionDigits: 0
+                                            }).format(context.parsed.y);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                border: { display: false }, // Hilangkan garis tebal sumbu Y
+                                grid: {
+                                    color: '#f1f5f9', // Warna garis panduan tipis
+                                    drawTicks: false,
+                                },
+                                ticks: {
+                                    font: { family: "'Plus Jakarta Sans', sans-serif" },
+                                    color: '#64748b',
+                                    // Singkat angka ribuan menjadi K, jutaan menjadi M (opsional)
+                                    callback: function(value, index, values) {
+                                        if(value >= 1000000) return 'Rp ' + (value / 1000000) + ' Jt';
+                                        if(value >= 1000) return 'Rp ' + (value / 1000) + ' Rb';
+                                        return value;
+                                    }
+                                }
+                            },
+                            x: {
+                                border: { display: false },
+                                grid: { display: false, drawTicks: false }, // Hilangkan garis vertikal
+                                ticks: {
+                                    font: { family: "'Plus Jakarta Sans', sans-serif", weight: '500' },
+                                    color: '#64748b'
+                                }
+                            }
+                        }
+                    }
+                });
             }
         });
     </script>

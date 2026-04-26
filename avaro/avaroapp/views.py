@@ -6,20 +6,13 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 from django.contrib import messages
 from django.db import transaction
-from django.http import HttpResponse, JsonResponse
 from django.conf import settings
-from .utils import data_cuaca, baca_config, tulis_config, getIP
-from .avarobot.avarobot import send_message_instant, get_session
-from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
-from django.core.files.base import ContentFile
 from .models import Profile, ListBlok, Transaksi
-from django.db.models import Q
-from django.urls import reverse
-from urllib.parse import urlparse, urlencode
-import datetime, locale, json, re, socket, os, uuid, io, zipfile, calendar
+from django.db.models import Sum
+import locale, re, calendar
 from django.utils import timezone
-from pathlib import Path
+from .utils import data_kas
 
 try:
     locale.setlocale(locale.LC_TIME, 'id_ID.UTF-8')
@@ -32,9 +25,43 @@ logger = logging.getLogger(__name__)
 
 @login_required
 def avaroapp(request):
+    sekarang = timezone.localtime(timezone.now())
+    tahun_sekarang = sekarang.year
+    bulan_sekarang = sekarang.month
+    semua_transaksi = Transaksi.objects.select_related('warga', 'user_input').order_by('-tanggal').all()
+
+    pemasukan_total_sekarang = semua_transaksi.filter(jenis='debit').aggregate(total=Sum('nominal'))['total'] or 0
+    pengeluaran_total_sekarang = semua_transaksi.filter(jenis='kredit').aggregate(total=Sum('nominal'))['total'] or 0
+    saldo_sekarang = pemasukan_total_sekarang - pengeluaran_total_sekarang
+
+    pemasukan_total_lalu = semua_transaksi.filter(jenis='debit').exclude(tanggal__year=tahun_sekarang, tanggal__month=bulan_sekarang).aggregate(total=Sum('nominal'))['total'] or 0
+    pengeluaran_total_lalu = semua_transaksi.filter(jenis='kredit').exclude(tanggal__year=tahun_sekarang, tanggal__month=bulan_sekarang).aggregate(total=Sum('nominal'))['total'] or 0
+    saldo_lalu = pemasukan_total_lalu - pengeluaran_total_lalu    
+
+    transaksi_sekarang = semua_transaksi.filter(tanggal__year=tahun_sekarang, tanggal__month=bulan_sekarang)
+    pemasukan_sekarang = transaksi_sekarang.filter(jenis='debit').aggregate(total=Sum('nominal'))['total'] or 0
+    pengeluaran_sekarang = transaksi_sekarang.filter(jenis='kredit').aggregate(total=Sum('nominal'))['total'] or 0
+
+    list_warga = Profile.objects.all()
+    list_warga_sekarang = transaksi_sekarang.filter(jenis='debit').values('warga').distinct()
+
+    transaksi_user = transaksi_sekarang.filter(warga=request.user.profile)
+    pemasukan_user = transaksi_user.filter(jenis='debit').aggregate(total=Sum('nominal'))['total'] or 0
+
+    rekap_bulanan = data_kas(tahun_sekarang)
 
     context = {
         'active_page' : 'dashboard',
+        'daftar_transaksi' : semua_transaksi[:5],
+        'saldo' : saldo_sekarang,
+        'trend' : saldo_sekarang - saldo_lalu,
+        'warga_bayar' : list_warga_sekarang.count(),
+        'jml_warga' : list_warga.count(),
+        'pemasukan' : pemasukan_sekarang,
+        'pengeluaran' : pengeluaran_sekarang,
+        'pemasukan_user' : pemasukan_user,
+        'rekap_bulanan' : rekap_bulanan,
+        'tahun_sekarang' : tahun_sekarang,
     }
     return render(request, 'index_base.html', context)
 
@@ -58,7 +85,7 @@ def daftarkan_warga(request):
             if User.objects.filter(username=username).exists():
                 messages.error(request, f"Gagal: Username '{username}' sudah digunakan.")
             else:
-                default_password = 'NyatuWarga123'
+                default_password = 'SapaWarga123'
                 user = User.objects.create_user(
                     username=username,
                     password=default_password,
@@ -215,9 +242,9 @@ def reset_password_default(request, username):
     
     try:
         # Gunakan set_password untuk mengenkripsi dan mengubah password langsung
-        target_user.set_password('NyatuWarga123')
+        target_user.set_password('SapaWarga123')
         target_user.save()
-        messages.success(request, f"Password untuk warga '{target_user.username}' berhasil direset menjadi 'NyatuWarga123'.")
+        messages.success(request, f"Password untuk warga '{target_user.username}' berhasil direset menjadi 'SapaWarga123'.")
     except Exception as e:
         messages.error(request, "Terjadi kesalahan saat mereset password.")
     
@@ -347,7 +374,7 @@ def del_transaksi(request, id_transaksi):
 
 @login_required
 def rekap_pemasukan(request):
-    sekarang = timezone.now()
+    sekarang = timezone.localtime(timezone.now())
     mode = request.GET.get('mode', 'bulanan') 
     
     tahun = int(request.GET.get('tahun', sekarang.year))
@@ -417,7 +444,7 @@ def rekap_pemasukan(request):
 
 @login_required
 def rekap_kas(request):
-    sekarang = timezone.now()
+    sekarang = timezone.localtime(timezone.now())
     mode = request.GET.get('mode', 'bulanan') 
     
     tahun = int(request.GET.get('tahun', sekarang.year))
@@ -446,7 +473,7 @@ def rekap_kas(request):
             if tx.jenis == 'debit':
                 rekap_bulanan['pemasukan'][bulan_tx] += tx.nominal
                 rekap_bulanan['total_pemasukan'] += tx.nominal
-            elif tx.jenis == 'Kredit': # Sesuaikan dengan value 'Kredit' di models.py Anda
+            elif tx.jenis == 'kredit': # Sesuaikan dengan value 'kredit' di models.py Anda
                 rekap_bulanan['pengeluaran'][bulan_tx] += tx.nominal
                 rekap_bulanan['total_pengeluaran'] += tx.nominal
                 
@@ -475,7 +502,7 @@ def rekap_kas(request):
             if tx.jenis == 'debit':
                 rekap_harian['pemasukan'][hari_tx] += tx.nominal
                 rekap_harian['total_pemasukan'] += tx.nominal
-            elif tx.jenis == 'Kredit':
+            elif tx.jenis == 'kredit':
                 rekap_harian['pengeluaran'][hari_tx] += tx.nominal
                 rekap_harian['total_pengeluaran'] += tx.nominal
                 
