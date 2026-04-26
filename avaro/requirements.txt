@@ -7,9 +7,9 @@ django-bootstrap-v5==1.0.11
 django-bootstrap5==26.2
 django-phonenumber-field==8.4.0
 idna==3.12
-numpy==2.4.4
-pandas==3.0.2
-phonenumbers==9.0.28
+numpy
+pandas
+phonenumbers
 pillow==12.2.0
 python-dateutil==2.9.0.post0
 requests==2.33.1

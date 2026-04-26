@@ -1,8 +1,4 @@
-from django.urls import path, include
-from django.conf import settings
-from django.contrib import admin
-from django.conf.urls.static import static
-from django.contrib.auth import views as auth_views
+from django.urls import path
 from . import views
 
 urlpatterns = [
@@ -24,15 +20,5 @@ urlpatterns = [
     path('rekap-pemasukan/', views.rekap_pemasukan, name='rekap_pemasukan'),
     path('rekap-kas/', views.rekap_kas, name='rekap_kas'),
 
-    # CHATERY
-    # path('webhook/chatery/', views.chatery_webhook, name='chatery_webhook'),
-    # path('send-document/', views.API_send_document, name='send_document'),
-    # path('send-image/', views.API_send_image, name='send_image'),
-
     path('profile/', views.profile_view, name='profile'),
 ]
-
-# if settings.DEBUG:
-#     urlpatterns += static('/hasil-excel/', document_root=settings.EXCEL_RESULTS_ROOT)
-#     # Jika Anda masih pakai media biasa, biarkan yang ini tetap ada
-#     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

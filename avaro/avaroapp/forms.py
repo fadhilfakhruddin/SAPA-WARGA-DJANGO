@@ -94,7 +94,6 @@ class ProfileUpdateForm(forms.ModelForm):
 class TransaksiForm(forms.ModelForm):
     class Meta:
         model = Transaksi
-        # user_input tidak dimasukkan karena akan diisi otomatis di views.py
         fields = ['tanggal', 'jenis', 'kategori', 'warga', 'nominal', 'keterangan', 'bukti_transaksi']
         widgets = {
             'tanggal': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),

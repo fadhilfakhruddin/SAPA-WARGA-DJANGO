@@ -3,11 +3,10 @@
 {% block title %} Data Warga {% endblock %}
 
 {% block content %}
-    <!-- KODE SAKTI UNTUK MENCEGAH PAGE SCROLL (FLEXBOX BLOWOUT) -->
     <style>
         .content-area {
-            min-width: 0; /* Memaksa area konten agar tidak melebar melampaui layar */
-            overflow-x: hidden; /* Mencegah tumpahan horizontal secara global */
+            min-width: 0; 
+            overflow-x: hidden; 
         }
     </style>
 
@@ -17,7 +16,6 @@
             <p class="text-muted small mt-1 mb-0">Daftar penghuni dan informasi kependudukan.</p>
         </div>
         
-        <!-- Tombol Tambah Warga HANYA MUNCUL JIKA ADMIN -->
         {% if request.user.is_superuser %}
         <button class="btn btn-primary d-flex align-items-center gap-2 shadow-sm rounded-3 fw-medium px-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#tambahWargaOffcanvas">
             <span class="material-symbols-outlined" style="font-size: 20px;">person_add</span>
@@ -26,7 +24,6 @@
         {% endif %}
     </div>
 
-    <!-- TABEL DATA WARGA -->
     <div class="card border-0 shadow-sm rounded-4 w-100">
         <div class="card-header bg-white border-bottom-0 pt-4 pb-3 px-4 d-flex justify-content-between align-items-center">
             <h5 class="card-title fw-bold mb-0 d-flex align-items-center" style="color: #1E293B;">
@@ -36,9 +33,7 @@
             <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">{{ daftar_warga|length }} KK Terdaftar</span>
         </div>
         <div class="card-body p-0">
-            <!-- table-responsive ini HANYA akan bekerja jika parent-nya (content-area) memiliki min-width: 0 seperti di CSS atas -->
             <div class="table-responsive">
-                <!-- text-nowrap memaksa teks 1 baris menyamping -->
                 <table class="table table-hover align-middle m-0 text-nowrap"> 
                     <thead class="table-light">
                         <tr>
@@ -48,14 +43,12 @@
                             {% endif %}
                             <th class="px-4 py-3 text-start text-uppercase small fw-bold text-muted border-0">Nama Kepala</th>
                             
-                            <!-- KOLOM SENSITIF: HANYA DITAMPILKAN KE ADMIN -->
                             {% if request.user.is_superuser %}
                                 <th class="px-4 py-3 text-start text-uppercase small fw-bold text-muted border-0">NIK Kepala</th>
                                 <th class="px-4 py-3 text-start text-uppercase small fw-bold text-muted border-0">No. KK</th>
                                 <th class="px-4 py-3 text-start text-uppercase small fw-bold text-muted border-0">Pasangan</th>
                             {% endif %}
                             
-                            <!-- KOLOM UMUM -->
                             <th class="px-4 py-3 text-start text-uppercase small fw-bold text-muted border-0">Status</th>
                             <th class="px-4 py-3 text-center text-uppercase small fw-bold text-muted border-0">Penghuni</th>
                             <th class="px-4 py-3 text-start text-uppercase small fw-bold text-muted border-0">Asal Daerah</th>
@@ -86,7 +79,6 @@
                                 {% endif %}
                             </td>
                             
-                            <!-- DATA SENSITIF UNTUK ADMIN -->
                             {% if request.user.is_superuser %}
                                 <td class="px-4 py-3 text-muted small">{{ warga.nik_kepala|default:"-" }}</td>
                                 <td class="px-4 py-3 text-muted small">{{ warga.kartu_keluarga|default:"-" }}</td>
@@ -149,9 +141,6 @@
 {% endblock %}
 
 {% block modals %}
-    <!-- ========================================== -->
-    <!-- PANEL OFFCANVAS PENDAFTARAN (Khusus Admin) -->
-    <!-- ========================================== -->
     {% if request.user.is_superuser %}
     <div class="offcanvas offcanvas-end shadow-lg" tabindex="-1" id="tambahWargaOffcanvas" aria-labelledby="tambahWargaLabel">
         <div class="offcanvas-header border-bottom bg-light">

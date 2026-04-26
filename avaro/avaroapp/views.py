@@ -116,10 +116,9 @@ def daftarkan_warga(request):
     return render(request, 'daftar-warga.html', context)
 
 @login_required
-@transaction.atomic # Memastikan kedua form tersimpan bersamaan
+@transaction.atomic 
 def profile_view(request):
     if request.method == 'POST':
-        # Kirim data POST ke kedua form
         user_form = UserUpdateForm(request.POST, instance=request.user)
         profile_form = ProfileUpdateForm(request.POST, instance=request.user.profile)
         
@@ -127,36 +126,31 @@ def profile_view(request):
             user_form.save()
             profile_form.save()
             messages.success(request, 'Profil Anda berhasil diperbarui.')
-            return redirect('profile') # Arahkan kembali ke halaman profil
+            return redirect('profile')
         else:
             messages.error(request, 'Terjadi kesalahan. Harap periksa data Anda.')
             
     else:
-        # Tampilkan form dengan data yang sudah ada
         user_form = UserUpdateForm(instance=request.user)
         profile_form = ProfileUpdateForm(instance=request.user.profile)
 
     context = {
         'user_form': user_form,
         'profile_form': profile_form,
-        'active_page': 'profile' # Untuk menandai sidebar
+        'active_page': 'profile'
     }
     return render(request, 'profile.html', context)
 
 @login_required
 def edit_warga(request, username):
-    # Keamanan: Pastikan hanya admin yang bisa mengedit profil orang lain
     if not request.user.is_superuser:
         messages.error(request, "Akses ditolak! Anda tidak memiliki izin mengedit data warga lain.")
         return redirect('daftarkan_warga')
 
-    # 1. Cari user berdasarkan username yang dilempar dari URL
     target_user = get_object_or_404(User, username=username)
     target_profile = target_user.profile
 
-    # 2. Proses form jika ada metode POST
     if request.method == 'POST':
-        # Gunakan instance=target_user agar form tahu data siapa yang mau diupdate
         user_form = UserUpdateForm(request.POST, instance=target_user)
         profile_form = ProfileUpdateForm(request.POST, instance=target_profile)
         
@@ -165,64 +159,51 @@ def edit_warga(request, username):
             profile_form.save()
             messages.success(request, f"Data warga {target_profile.nama_kepala} berhasil diperbarui!")
             
-            # Kembali ke daftar warga setelah selesai edit
             return redirect('daftarkan_warga') 
         else:
             messages.error(request, "Gagal memperbarui data. Silakan periksa kembali form.")
     else:
-        # Jika bukan POST, tampilkan form yang sudah terisi data warga tersebut
         user_form = UserUpdateForm(instance=target_user)
         profile_form = ProfileUpdateForm(instance=target_profile)
 
-    # Kirim ke profile.html yang sama dengan yang digunakan warga biasa
     context = {
         'user_form': user_form,
         'profile_form': profile_form,
-        # Kita bisa lempar target_user ke html jika ingin mengubah judul halaman
         'target_user': target_user 
     }
     return render(request, 'profile.html', context)
 
 @login_required
 def del_warga(request, username):
-    # 1. Keamanan: Pastikan hanya admin yang bisa menghapus
     if not request.user.is_superuser:
         messages.error(request, "Akses ditolak! Anda tidak memiliki izin untuk menghapus data warga.")
         return redirect('daftarkan_warga')
 
-    # 2. Keamanan: Mencegah admin menghapus akunnya sendiri
     if request.user.username == username:
         messages.error(request, "Peringatan: Anda tidak dapat menghapus akun admin Anda sendiri!")
         return redirect('daftarkan_warga')
 
-    # 3. Ambil data user target
     target_user = get_object_or_404(User, username=username)
     
-    # Ambil nama untuk ditampilkan di pesan sukses (kalau namanya kosong, tampilkan username-nya)
     nama_warga = target_user.profile.nama_kepala or target_user.username
 
     try:
-        # 4. HAPUS USER (Otomatis memicu CASCADE yang juga menghapus Profile-nya)
         target_user.delete()
         messages.success(request, f"Data warga {nama_warga} beserta akun login-nya berhasil dihapus permanen!")
     except Exception as e:
         messages.error(request, "Terjadi kesalahan saat menghapus data warga.")
         
-    # Kembali ke halaman daftar warga
     return redirect('daftarkan_warga')
 
 @login_required
 def ganti_password(request):
     if request.method == 'POST':
-        # PasswordChangeForm bawaan Django butuh 2 argumen: user yang sedang login, dan data POST
         form = PasswordChangeForm(request.user, request.POST)
         if form.is_valid():
             user = form.save()
-            # PENTING: Update session agar user tidak otomatis ter-logout setelah ganti password
             update_session_auth_hash(request, user)  
             messages.success(request, 'Password Anda berhasil diperbarui!')
             
-            # Kembali ke halaman profil (Sesuaikan nama 'profile' dengan yang ada di urls.py kamu)
             return redirect('profile') 
         else:
             messages.error(request, 'Gagal mengganti password. Silakan periksa kembali form di bawah.')
@@ -233,7 +214,6 @@ def ganti_password(request):
 
 @login_required
 def reset_password_default(request, username):
-    # Pastikan hanya admin yang bisa mengakses
     if not request.user.is_superuser:
         messages.error(request, "Akses ditolak! Hanya admin yang dapat mereset password warga.")
         return redirect('daftarkan_warga')
@@ -241,7 +221,6 @@ def reset_password_default(request, username):
     target_user = get_object_or_404(User, username=username)
     
     try:
-        # Gunakan set_password untuk mengenkripsi dan mengubah password langsung
         target_user.set_password('SapaWarga123')
         target_user.save()
         messages.success(request, f"Password untuk warga '{target_user.username}' berhasil direset menjadi 'SapaWarga123'.")
@@ -311,15 +290,12 @@ def edit_blok(request, blok_id):
         return redirect(base_url)
 
 def daftar_transaksi(request):
-    # 1. Tangkap parameter filter dari URL (dari form HTML method="GET")
     filter_jenis = request.GET.get('jenis')
     filter_bulan = request.GET.get('bulan')
     filter_tahun = request.GET.get('tahun')
 
-    # 2. Ambil semua data transaksi dasar
     semua_transaksi = Transaksi.objects.select_related('warga', 'user_input').all()
 
-    # 3. Terapkan filter jika admin memilih sesuatu di HTML
     if filter_jenis:
         semua_transaksi = semua_transaksi.filter(jenis=filter_jenis)
     if filter_bulan:
@@ -327,23 +303,18 @@ def daftar_transaksi(request):
     if filter_tahun:
         semua_transaksi = semua_transaksi.filter(tanggal__year=filter_tahun)
         
-    # 4. Urutkan dari yang terbaru
     semua_transaksi = semua_transaksi.order_by('-tanggal', '-id')
     
-    # Inisialisasi Form
     form = TransaksiForm()
 
     if request.method == 'POST':
-        # Proteksi: Hanya admin yang bisa POST transaksi
         if not request.user.is_superuser:
             messages.error(request, "Akses ditolak! Anda tidak dapat menginput transaksi.")
             return redirect('daftar_transaksi')
         
-        # PENTING: request.FILES wajib disertakan karena kita mengupload gambar
         form = TransaksiForm(request.POST, request.FILES)
         
         if form.is_valid():
-            # Jangan langsung save, kita harus mengisi user_input (Admin) secara manual
             transaksi_baru = form.save(commit=False)
             transaksi_baru.user_input = request.user
             transaksi_baru.save()
@@ -384,14 +355,12 @@ def rekap_pemasukan(request):
     
     rekap_bulanan = []
     rekap_harian = []
-    list_bulan = list(range(1, 13)) # Menghasilkan angka 1 sampai 12
+    list_bulan = list(range(1, 13))
     list_hari = []
 
     if mode == 'bulanan':
-        # Ambil transaksi PEMASUKAN di tahun yang dipilih
         transaksi = Transaksi.objects.filter(jenis='debit', tanggal__year=tahun)
         
-        # 1. Buat kerangka kamus (dictionary) kosong untuk setiap warga
         for w in warga_list:
             rekap_bulanan.append({
                 'warga': w,
@@ -399,18 +368,14 @@ def rekap_pemasukan(request):
                 'total': 0
             })
             
-        # 2. Map index berdasarkan ID warga untuk mempercepat proses pencarian (O(1))
         warga_map = {d['warga'].id: d for d in rekap_bulanan}
         
-        # 3. Isi kerangka kosong tadi dengan nominal dari database transaksi
         for tx in transaksi:
             if tx.warga_id in warga_map:
                 warga_map[tx.warga_id]['bulan'][tx.tanggal.month] += tx.nominal
                 warga_map[tx.warga_id]['total'] += tx.nominal
 
     elif mode == 'harian':
-        # Cari tahu ada berapa hari dalam bulan dan tahun yang dipilih (misal Feb 2024 = 29 hari)
-        # Gunakan _, num_days untuk memisahkan hasil tuple
         _, num_days = calendar.monthrange(tahun, bulan)
         list_hari = list(range(1, num_days + 1))
         
@@ -453,7 +418,6 @@ def rekap_kas(request):
     list_bulan = list(range(1, 13))
     list_hari = []
     
-    # Siapkan kerangka data
     rekap_bulanan = {
         'pemasukan': {m: 0 for m in list_bulan},
         'pengeluaran': {m: 0 for m in list_bulan},
@@ -463,7 +427,7 @@ def rekap_kas(request):
         'total_saldo': 0
     }
     
-    rekap_harian = {} # Akan diisi jika mode == 'harian'
+    rekap_harian = {} 
 
     if mode == 'bulanan':
         transaksi = Transaksi.objects.filter(tanggal__year=tahun)
@@ -473,11 +437,10 @@ def rekap_kas(request):
             if tx.jenis == 'debit':
                 rekap_bulanan['pemasukan'][bulan_tx] += tx.nominal
                 rekap_bulanan['total_pemasukan'] += tx.nominal
-            elif tx.jenis == 'kredit': # Sesuaikan dengan value 'kredit' di models.py Anda
+            elif tx.jenis == 'kredit': 
                 rekap_bulanan['pengeluaran'][bulan_tx] += tx.nominal
                 rekap_bulanan['total_pengeluaran'] += tx.nominal
                 
-        # Hitung saldo bersih per bulan
         for m in list_bulan:
             rekap_bulanan['saldo'][m] = rekap_bulanan['pemasukan'][m] - rekap_bulanan['pengeluaran'][m]
         rekap_bulanan['total_saldo'] = rekap_bulanan['total_pemasukan'] - rekap_bulanan['total_pengeluaran']
@@ -506,7 +469,6 @@ def rekap_kas(request):
                 rekap_harian['pengeluaran'][hari_tx] += tx.nominal
                 rekap_harian['total_pengeluaran'] += tx.nominal
                 
-        # Hitung saldo bersih per hari
         for d in list_hari:
             rekap_harian['saldo'][d] = rekap_harian['pemasukan'][d] - rekap_harian['pengeluaran'][d]
         rekap_harian['total_saldo'] = rekap_harian['total_pemasukan'] - rekap_harian['total_pengeluaran']

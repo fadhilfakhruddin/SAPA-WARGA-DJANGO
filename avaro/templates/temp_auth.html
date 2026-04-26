@@ -8,39 +8,32 @@
     <title>{% block title %}{% endblock %}</title>
     <link rel="shortcut icon" href="{% static 'nyatuwarga_blue.png' %}" type="image/x-icon">
     
-    <!-- Memuat CSS Bootstrap -->
     {% bootstrap_css %}
     
-    <!-- Font Kustom (Inter) & Style Kustom -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        /* Menerapkan font Inter sebagai default */
         body, .btn {
             font-family: 'Inter', sans-serif;
         }
         
-        /* Latar belakang halaman */
         body {
             background-color: #f8f9fa;
         }
         
-        /* Panel biru kustom */
         .bg-origin-blue {
-            background-color: #3b82f6; /* Mirip dengan bg-blue-500 */
+            background-color: #3b82f6;
         }
         
-        /* Styling input agar rounded-pill */
         .form-control.rounded-pill {
             padding-top: 0.75rem;
             padding-bottom: 0.75rem;
         }
 
-        /* Teks abu-abu untuk label */
         .form-label-custom {
-            color: #6b7280; /* Mirip dengan text-gray-500 */
+            color: #6b7280;
             font-size: 0.75rem;
             font-weight: 600;
             text-transform: uppercase;
@@ -73,19 +66,14 @@
 </head>
 <body class="d-flex align-items-center justify-content-center min-vh-100 p-4">
 
-    <!-- Kontainer Kartu Login -->
-    <div class="container-fluid" style="max-width: 56rem;"> <!-- max-w-4xl -->
+    <div class="container-fluid" style="max-width: 56rem;">
         <div class="card shadow-lg border-0 rounded-3 overflow-hidden">
             <div class="row g-0">
                 
-                <!-- Panel Kiri (Biru) -->
                 <div class="col-md-6 d-none d-md-flex flex-column justify-content-center align-items-center text-white text-center p-5 bg-origin-blue">
-                    <!-- Logo -->
-                    <!-- Ikon Segitiga SVG -->
                     <img src="{% static 'nyatuwarga_white.png' %}" class="w-16 h-16" width="280" height="280" viewBox="0 0 24 24">
                 </div>
                 
-                <!-- Panel Kanan (Form) -->
                 <div class="col-md-6 p-4 p-sm-5">
                     <div class="d-flex flex-column justify-content-center h-100">
                         {% if messages %}
@@ -106,7 +94,6 @@
         </div>
     </div>
 
-    <!-- Memuat JS Bootstrap -->
     {% bootstrap_javascript %}
 </body>
 </html>

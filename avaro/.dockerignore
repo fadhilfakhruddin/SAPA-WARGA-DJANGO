@@ -1,0 +1,26 @@
+# Python environment
+avaroweb/
+env/
+__pycache__/
+*.py[cod]
+
+# Chatery
+chatery/node_modules/
+chatery/auth_info/
+chatery/sessions/
+chatery/public/media/
+chatery/n8n-nodes-chatery-whatsapp/
+
+# Django sensitive & local files
+.env
+#db.sqlite3
+media/
+staticfiles/
+django_cache/
+avaro.json
+dump.rdb
+avaro/dump.rdb
+.git/
+
+# System files
+.DS_Store

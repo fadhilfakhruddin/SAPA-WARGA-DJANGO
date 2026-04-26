@@ -11,7 +11,6 @@ class ListBlok(models.Model):
     blok = models.CharField(max_length=100, blank=False, null=False, primary_key=True)
     nama_blok = models.CharField(max_length=100, blank=False, null=False)
 
-    # Tambahkan __str__ agar tampilan di Admin/Form rapi
     def __str__(self):
         return f"{self.blok} - {self.nama_blok}"
 
@@ -45,16 +44,12 @@ def rename_bukti_transaksi(instance, filename):
     """
     Format nama file: bukti_transaksi/bukti_{uuid_acak}.{ekstensi_asli}
     """
-    # Ambil ekstensi asli dari file (misal: .jpg, .png, .pdf)
     ext = filename.split('.')[-1]
     
-    # Generate ID unik (8 karakter) agar jika ada gambar bernama sama, tidak saling timpa
     unique_id = uuid.uuid4().hex[:8]
     
-    # Rangkai nama file baru
     new_filename = f"bukti_{unique_id}.{ext}"
     
-    # Simpan ke dalam folder 'media/bukti_transaksi/'
     return os.path.join('bukti_transaksi/', new_filename)
     
 class Transaksi(models.Model):

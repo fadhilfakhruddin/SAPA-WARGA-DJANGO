@@ -4,25 +4,21 @@
 {% block title %} Rekap Pemasukan Warga {% endblock %}
 
 {% block content %}
-    <!-- KODE SAKTI MENCEGAH PAGE SCROLL & STICKY COLUMN -->
     <style>
         .content-area {
             min-width: 0; 
             overflow-x: hidden; 
         }
-        /* Membuat nama warga tetap terlihat (tidak ikut ke-scroll ke kanan) */
         .sticky-col {
             position: sticky;
             left: 0;
             background-color: #ffffff !important;
             z-index: 1;
-            /* Memberi batas tipis di sebelah kanan kolom sticky */
             box-shadow: inset -1px 0 0 #dee2e6; 
         }
         thead .sticky-col {
-            z-index: 2; /* Agar header lengket selalu berada di atas row lengket saat di-scroll ke bawah */
+            z-index: 2; 
         }
-        /* Menambahkan sedikit tinggi maksimal agar tabel bisa di-scroll ke bawah di layar kecil */
         .table-responsive {
             max-height: 70vh;
         }
@@ -35,7 +31,6 @@
         </div>
     </div>
 
-    <!-- TABS NAVIGASI -->
     <ul class="nav nav-tabs mb-4 border-bottom">
         <li class="nav-item">
             <a class="nav-link {% if mode == 'bulanan' %}active fw-bold text-primary border-bottom-0{% else %}text-muted{% endif %}" 
@@ -53,16 +48,11 @@
         </li>
     </ul>
 
-    <!-- ========================================== -->
-    <!-- FILTER TRANSAKSI                           -->
-    <!-- ========================================== -->
     <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white">
         <div class="card-body p-3">
             <form method="GET" class="row g-3 align-items-center">
-                <!-- Kita mengirimkan parameter 'mode' kembali agar tab tidak ter-reset saat di-filter -->
                 <input type="hidden" name="mode" value="{{ mode }}">
 
-                <!-- Filter Tahun MUNCUL DI KEDUA MODE -->
                 <div class="col-12 col-md-3">
                     <div class="input-group shadow-sm rounded-3 overflow-hidden">
                         <span class="input-group-text bg-light border-end-0 text-muted">
@@ -102,7 +92,6 @@
                 </div>
                 {% endif %}
 
-                <!-- Tombol Terapkan -->
                 <div class="col-12 col-md-4 d-flex gap-2">
                     <button type="submit" class="btn btn-primary shadow-sm d-flex justify-content-center align-items-center gap-2 rounded-3 px-4">
                         <span class="material-symbols-outlined" style="font-size: 18px;">search</span>
@@ -113,9 +102,6 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- MATRIKS TABEL REKAPITULASI                 -->
-    <!-- ========================================== -->
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden w-100">
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -125,7 +111,6 @@
                             <th class="px-4 py-3 sticky-col text-uppercase small fw-bold text-muted">Nama Warga</th>
                             <th class="px-3 py-3 text-center text-uppercase small fw-bold text-muted">Blok</th>
                             
-                            <!-- RENDER HEADERS BERDASARKAN MODE -->
                             {% if mode == 'bulanan' %}
                                 <th class="px-3 py-3 text-center small fw-bold text-muted">Jan</th>
                                 <th class="px-3 py-3 text-center small fw-bold text-muted">Feb</th>
@@ -150,7 +135,6 @@
                     </thead>
                     <tbody>
                         
-                        <!-- JIKA MODE BULANAN -->
                         {% if mode == 'bulanan' %}
                             {% for row in rekap_bulanan %}
                             <tr>
@@ -161,7 +145,6 @@
                                     </span>
                                 </td>
                                 
-                                <!-- Loop isi nominal menggunakan dict.values (akan urut dari bulan 1 sampai 12) -->
                                 {% for nominal in row.bulan.values %}
                                     <td class="px-3 py-3 text-end {% if nominal > 0 %}text-success fw-bold{% else %}text-muted{% endif %}">
                                         {% if nominal > 0 %}
@@ -180,7 +163,6 @@
                             </tr>
                             {% endfor %}
                             
-                        <!-- JIKA MODE HARIAN -->
                         {% else %}
                             {% for row in rekap_harian %}
                             <tr>
@@ -191,7 +173,6 @@
                                     </span>
                                 </td>
                                 
-                                <!-- Loop isi nominal menggunakan dict.values (akan urut dari tanggal 1 sampai 31/akhir bulan) -->
                                 {% for nominal in row.hari.values %}
                                     <td class="px-2 py-3 text-end small {% if nominal > 0 %}text-success fw-bold{% else %}text-muted{% endif %}">
                                         {% if nominal > 0 %}
