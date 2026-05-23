@@ -26,10 +26,18 @@
         </div>
         
         {% if request.user.is_superuser %}
-        <button class="btn btn-primary d-flex align-items-center gap-2 shadow-sm rounded-3 fw-medium px-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#tambahTransaksiOffcanvas">
-            <span class="material-symbols-outlined" style="font-size: 20px;">add_card</span>
-            Tambah Transaksi
-        </button>
+        <div class="d-flex mb-4 pb-2 gap-3">
+            <button class="btn btn-primary d-flex align-items-center gap-2 shadow-sm rounded-3 fw-medium px-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#tambahIuranOffcanvas">
+                <span class="material-symbols-outlined" style="font-size: 20px;">payments</span>
+                Iuran Warga
+            </button>
+
+            <button class="btn btn-primary d-flex align-items-center gap-2 shadow-sm rounded-3 fw-medium px-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#tambahTransaksiOffcanvas">
+                <span class="material-symbols-outlined" style="font-size: 20px;">add_card</span>
+                Tambah Transaksi
+            </button>
+        </div>
+        
         {% endif %}
     </div>
 
@@ -109,7 +117,6 @@
                         <tr>
                             <th class="px-4 py-3 text-start text-uppercase small fw-bold text-muted border-0">Tanggal</th>
                             <th class="px-4 py-3 text-start text-uppercase small fw-bold text-muted border-0">Jenis</th>
-                            <th class="px-4 py-3 text-start text-uppercase small fw-bold text-muted border-0">Kategori</th>
                             <th class="px-4 py-3 text-start text-uppercase small fw-bold text-muted border-0">Warga (Terkait)</th>
                             <th class="px-4 py-3 text-start text-uppercase small fw-bold text-muted border-0">Keterangan</th>
                             <th class="px-4 py-3 text-end text-uppercase small fw-bold text-muted border-0">Nominal</th>
@@ -134,7 +141,6 @@
                                 {% endif %}
                             </td>
                             
-                            <td class="px-4 py-3 fw-medium text-dark">{{ tx.kategori }}</td>
                             <td class="px-4 py-3 small text-muted">{{ tx.warga.nama_kepala|default:"-" }}</td>
                             
                             <td class="px-4 py-3 small text-muted" title="{{ tx.keterangan }}">
@@ -148,7 +154,7 @@
                             <td class="px-4 py-3 text-center">
                                 {% if tx.bukti_transaksi %}
                                     <button class="btn btn-sm btn-outline-secondary rounded-pill d-inline-flex align-items-center px-3" 
-                                            onclick="showBuktiModal('{{ tx.bukti_transaksi.url }}', '{{ tx.kategori }} - {{ tx.tanggal|date:"d M Y" }}')">
+                                            onclick="showBuktiModal('{{ tx.bukti_transaksi.url }}', '{{ tx.jenis }} - {{ tx.tanggal|date:"d M Y" }}')">
                                         <span class="material-symbols-outlined me-1" style="font-size: 16px;">image</span>
                                         Lihat
                                     </button>
@@ -223,6 +229,62 @@
     </script>
 
     {% if request.user.is_superuser %}
+    <div class="offcanvas offcanvas-end shadow-lg" tabindex="-1" id="tambahIuranOffcanvas" aria-labelledby="tambahIuranLabel">
+        <div class="offcanvas-header border-bottom bg-light">
+            <h5 class="offcanvas-title fw-bold text-primary d-flex align-items-center" id="tambahIuranLabel">
+                <span class="material-symbols-outlined me-2">payments</span>
+                Iuran Warga
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            
+            <form method="POST" action="{% url 'daftar_transaksi' %}?tipe=iuran" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="jenis" value="debit">
+
+                <div class="mb-3">
+                    {% bootstrap_field form.tanggal %}
+                </div>
+
+                <div class="mb-3">
+                    {% bootstrap_field form.nominal %}
+                    <div class="d-flex gap-1 flex-wrap mt-1">
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2" style="font-size: 0.7rem; padding-top: 0.1rem; padding-bottom: 0.1rem;" onclick="document.getElementById('id_nominal').value = 50000">50.000</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2" style="font-size: 0.7rem; padding-top: 0.1rem; padding-bottom: 0.1rem;" onclick="document.getElementById('id_nominal').value = 100000">100.000</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2" style="font-size: 0.7rem; padding-top: 0.1rem; padding-bottom: 0.1rem;" onclick="document.getElementById('id_nominal').value = 150000">150.000</button>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    {% bootstrap_field form.warga %}
+                </div>
+
+                <div class="mb-3">
+                    {% bootstrap_field form.keterangan %}
+                </div>
+
+                <div class="mb-4">
+                    <div class="bg-light p-3 rounded-3 border border-dashed">
+                        {% bootstrap_field form.bukti_transaksi %}
+                    </div>
+                </div>
+
+                <hr class="mb-4 border-light">
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary rounded-3 py-2 fw-medium shadow-sm d-flex justify-content-center align-items-center gap-2">
+                        <span class="material-symbols-outlined" style="font-size: 20px;">save</span>
+                        Simpan Transaksi
+                    </button>
+                    <button type="button" class="btn btn-light rounded-3 py-2 fw-medium border" data-bs-dismiss="offcanvas">
+                        Batal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="offcanvas offcanvas-end shadow-lg" tabindex="-1" id="tambahTransaksiOffcanvas" aria-labelledby="tambahTransaksiLabel">
         <div class="offcanvas-header border-bottom bg-light">
             <h5 class="offcanvas-title fw-bold text-primary d-flex align-items-center" id="tambahTransaksiLabel">
@@ -233,7 +295,7 @@
         </div>
         <div class="offcanvas-body">
             
-            <form method="POST" action="{% url 'daftar_transaksi' %}" enctype="multipart/form-data">
+            <form method="POST" action="{% url 'daftar_transaksi' %}?tipe=trx" enctype="multipart/form-data">
                 {% csrf_token %}
                 
                 <div class="mb-3">
@@ -247,14 +309,6 @@
                     <div class="col-6">
                         {% bootstrap_field form.nominal %}
                     </div>
-                </div>
-
-                <div class="mb-3">
-                    {% bootstrap_field form.kategori %}
-                </div>
-
-                <div class="mb-3">
-                    {% bootstrap_field form.warga %}
                 </div>
 
                 <div class="mb-3">

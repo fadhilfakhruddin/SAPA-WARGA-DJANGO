@@ -34,6 +34,7 @@ class Profile(models.Model):
     jumlah_penghuni = models.IntegerField(blank=True, null=True)
     kartu_keluarga = models.CharField(max_length=16, validators=[enambelas_digit_validator], blank=True, null=True)
     blok = models.ForeignKey(ListBlok, on_delete=models.CASCADE, null=True, blank=True)
+    no_rumah = models.CharField(max_length=20, blank=True, null=True)
     asal_daerah = models.TextField(blank=True, null=True)
     phone_number = PhoneNumberField(null=True, blank=True, region="ID")
 
@@ -60,7 +61,6 @@ class Transaksi(models.Model):
 
     tanggal = models.DateField(default=timezone.now)
     jenis = models.CharField(max_length=10, choices=JENIS_TRANSAKSI)
-    kategori = models.CharField(max_length=100)
     nominal = models.DecimalField(max_digits=12, decimal_places=2)
     keterangan = models.TextField(blank=True, null=True)
     

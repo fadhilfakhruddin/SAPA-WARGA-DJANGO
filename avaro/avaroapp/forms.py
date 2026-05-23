@@ -68,7 +68,7 @@ class ProfileUpdateForm(forms.ModelForm):
     """Form untuk mengedit info tambahan di Profile."""
     class Meta:
         model = Profile
-        fields = ['nik_kepala', 'nama_kepala', 'nik_pasangan', 'nama_pasangan', 'status', 'jumlah_penghuni', 'kartu_keluarga', 'blok', 'asal_daerah', 'phone_number']
+        fields = ['nik_kepala', 'nama_kepala', 'nik_pasangan', 'nama_pasangan', 'status', 'jumlah_penghuni', 'kartu_keluarga', 'blok', 'no_rumah', 'asal_daerah', 'phone_number']
         labels = {
             'nik_kepala' : 'NIK Kepala Keluarga',
             'nama_kepala' : 'Nama Kepala Keluarga',
@@ -78,6 +78,7 @@ class ProfileUpdateForm(forms.ModelForm):
             'kartu_keluarga' : 'No. KK',
             'asal_daerah' : 'Asal Daerah',
             'phone_number' : 'No. Telp',
+            'no_rumah' : 'Nomor Rumah',
         }
         widgets = {
             'nama_kepala': forms.TextInput(attrs={
@@ -94,7 +95,7 @@ class ProfileUpdateForm(forms.ModelForm):
 class TransaksiForm(forms.ModelForm):
     class Meta:
         model = Transaksi
-        fields = ['tanggal', 'jenis', 'kategori', 'warga', 'nominal', 'keterangan', 'bukti_transaksi']
+        fields = ['tanggal', 'jenis', 'warga', 'nominal', 'keterangan', 'bukti_transaksi']
         widgets = {
             'tanggal': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'keterangan': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Opsional...'}),
@@ -102,6 +103,6 @@ class TransaksiForm(forms.ModelForm):
             'warga': forms.Select(attrs={'class': 'form-select'}),
         }
         labels = {
-            'warga': 'Pilih Warga (Opsional, untuk iuran)',
+            'warga': 'Pilih Warga',
             'bukti_transaksi': 'Upload Bukti (Opsional)'
         }

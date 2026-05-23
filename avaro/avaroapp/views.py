@@ -319,7 +319,7 @@ def daftar_transaksi(request):
             transaksi_baru.user_input = request.user
             transaksi_baru.save()
             
-            messages.success(request, f"Berhasil! Transaksi {transaksi_baru.kategori} senilai Rp {transaksi_baru.nominal} telah dicatat.")
+            messages.success(request, f"Berhasil! Transaksi senilai Rp {transaksi_baru.nominal} telah dicatat.")
             return redirect('daftar_transaksi')
         else:
             messages.error(request, "Gagal mencatat transaksi. Periksa kembali form isian.")

@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    # BARIS INI WAJIB ADA UNTUK AUTO-REFRESH (DEVELOPMENT)
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      # Diakses dari Windows lewat port 80 (http://localhost)
+      - "80:8000"
+    volumes:
+      # 1. Menghubungkan kode untuk auto-refresh
+      - .:/app
+      # 2. Menghubungkan folder database agar data aman (Persisten)
+      - ./sqlite_data:/app/database
