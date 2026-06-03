@@ -506,7 +506,7 @@
                         datasets: [
                             {
                                 label: 'Pemasukan',
-                                data: [{% for nominal in rekap_bulanan.pemasukan.values %} {% if nominal > 0 %}{{ nominal }}{% else %} 0 {% endif %}, {% endfor %}], 
+                                data: [{% for nominal in rekap_bulanan.pemasukan.values %} {% if nominal > 0 %}{{ nominal|floatformat:"0"|intcomma }}{% else %} 0 {% endif %}, {% endfor %}], 
                                 backgroundColor: '#10B981', 
                                 borderRadius: 6, 
                                 barPercentage: 0.6,
@@ -514,7 +514,7 @@
                             },
                             {
                                 label: 'Pengeluaran',
-                                data:[{% for nominal in rekap_bulanan.pengeluaran.values %} {% if nominal > 0 %}{{ nominal }}{% else %} 0 {% endif %}, {% endfor %}],
+                                data:[{% for nominal in rekap_bulanan.pengeluaran.values %} {% if nominal > 0 %}{{ nominal|floatformat:"0"|intcomma }}{% else %} 0 {% endif %}, {% endfor %}],
                                 backgroundColor: '#EF4444', 
                                 borderRadius: 6,
                                 barPercentage: 0.6,
